@@ -5,11 +5,7 @@ from tensorflow.keras.layers import Dense
 from tensorflow.keras.models import Model
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.layers import concatenate
-import numpy as np
-import argparse
-import locale
-import os
-import pandas as pd
+from pathlib import Path
 # construct the argument parser and parse the arguments
 #ap = argparse.ArgumentParser()
 #ap.add_argument("-d", "--dataset", type=str, required=True,
@@ -19,17 +15,18 @@ import pandas as pd
 # construct the path to the input .txt file that contains information
 # on each house in the dataset and then load the dataset
 print("[INFO] loading Category attributes...")
-inputPath = "D:\School\Master\Vakken\MPR\Project\Data\Test_categories.csv"
+inputPath = Path("TestData") / 'Test_categories.csv'
 df = datasets.load_category_attributes(inputPath)
 # load the house images and then scale the pixel intensities to the
 # range [0, 1]
 print("[INFO] loading images...")
-inputPath ="D:\\School\\Master\\Vakken\\MPR\\Project\\Data\\test_images"
+inputPath = Path('TestData') / 'test_images'
 images = datasets.load_images(df, inputPath)
 images = images / 255.0
 
 print("[INFO] loading labels...")
-labels = datasets.load_labels("D:\School\Master\Vakken\MPR\Project\Data\Test_labels.csv")
+labels = Path("TestData") / 'Test_labels.csv'
+labels = datasets.load_labels(labels)
 testY = labels[:25]
 trainY = labels[25:]
 

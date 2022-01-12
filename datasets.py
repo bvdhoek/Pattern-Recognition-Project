@@ -1,10 +1,9 @@
-from sklearn.preprocessing import LabelBinarizer
-from sklearn.preprocessing import MinMaxScaler
+from pathlib import Path
 import pandas as pd
 import numpy as np
-import glob
 import cv2
 import os
+
 def load_category_attributes(inputPath):
 	# initialize the list of column names in the CSV file and then
 	# load it using Pandas
@@ -24,19 +23,13 @@ def load_labels(inputPath):
     return df
 
 def process_house_attributes(df, train, test):
-	
-    
-    
-    
-    
     return (train, test)
 
 
-def load_images(df, inputPath):
-    
+def load_images(df, inputPath: Path):  
     images = []
     for image_name in os.listdir(inputPath):
-        image = cv2.imread(inputPath + "\\" +  image_name)
+        image = cv2.imread(str(inputPath / image_name))
         images.append(image)
         
     return np.array(images)
