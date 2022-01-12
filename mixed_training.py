@@ -5,7 +5,15 @@ from tensorflow.keras.layers import Dense
 from tensorflow.keras.models import Model
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.layers import concatenate
-from pathlib import Path
+import numpy as np
+import argparse
+import locale
+import os
+import pandas as pd
+
+percentage_test = .25
+
+
 # construct the argument parser and parse the arguments
 #ap = argparse.ArgumentParser()
 #ap.add_argument("-d", "--dataset", type=str, required=True,
@@ -15,37 +23,35 @@ from pathlib import Path
 # construct the path to the input .txt file that contains information
 # on each house in the dataset and then load the dataset
 print("[INFO] loading Category attributes...")
-inputPath = Path("TestData") / 'Test_categories.csv'
+inputPath = "D:\School\Master\Vakken\MPR\Project\Data\small_subset_dummy_categories.csv"
 df = datasets.load_category_attributes(inputPath)
 # load the house images and then scale the pixel intensities to the
 # range [0, 1]
 print("[INFO] loading images...")
-inputPath = Path('TestData') / 'test_images'
+inputPath ="D:/School/Master/Vakken/MPR/Project/Data/50States2K_test/small_subset"
 images = datasets.load_images(df, inputPath)
-images = images / 255.0
+#images = images / 255.0
 
 print("[INFO] loading labels...")
-labels = Path("TestData") / 'Test_labels.csv'
-labels = datasets.load_labels(labels)
-testY = labels[:25]
-trainY = labels[25:]
+labels = datasets.load_labels("D:\School\Master\Vakken\MPR\Project\Data\small_subset_labels.csv")
+
+testY = labels[:1250]
+trainY = labels[1250:]
 
 # partition the data into training and testing splits using 75% of
 # the data for training and the remaining 25% for testing
 print("[INFO] processing data...")
-split = train_test_split(df, images, test_size=0.25, random_state=42)
-(trainAttrX, testAttrX, trainImagesX, testImagesX) = split
+split = train_test_split(df, images, test_size=percentage_test, random_state=42)
+(trainCategories, testCategories, trainImages, testImages) = split
 
 
-(trainAttrX, testAttrX) = datasets.process_house_attributes(df,
-	trainAttrX, testAttrX)
 
 #x=np.asarray([trainAttrX, trainImagesX]).astype('float32')
 
 
 
 # create the MLP and CNN models
-mlp = models.create_mlp(trainAttrX.shape[1], regress=False)
+mlp = models.create_mlp(trainCategories.shape[1], regress=False)
 cnn = models.create_cnn(256, 256, 3, regress=False)
 # create the input to our final set of layers as the *output* of both
 # the MLP and CNN
@@ -67,15 +73,16 @@ model.compile(loss="mean_absolute_percentage_error", optimizer=opt)
 # train the model
 print("[INFO] training model...")
 model.fit(
-    
-    x=[trainAttrX, trainImagesX], y=trainY,
-	validation_data=([testAttrX, testImagesX], testY),
-	epochs=200, batch_size=8)
+    x=[trainCategories, trainImages], y=trainY,
+	validation_data=([testCategories, testImages], testY),
+	epochs=1, batch_size=8)
     
     
 	#x=([trainAttrX, trainImagesX], trainY),
 	#validation_data=([testAttrX, testImagesX], testY),
 	#epochs=200, batch_size=8)
 # make predictions on the testing data
-print("[INFO] predicting house prices...")
-preds = model.predict([testAttrX, testImagesX])
+print("[INFO] predicting...")
+preds = model.predict([testCategories, testImages])
+
+print(preds)
