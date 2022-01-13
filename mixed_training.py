@@ -23,17 +23,17 @@ percentage_test = .25
 # construct the path to the input .txt file that contains information
 # on each house in the dataset and then load the dataset
 print("[INFO] loading Category attributes...")
-inputPath = "D:\School\Master\Vakken\MPR\Project\Data\small_subset_dummy_categories.csv"
+inputPath = "D:\Git\Pattern-Recognition-Project\TestData\small_subset_dummy_categories.csv"
 df = datasets.load_category_attributes(inputPath)
 # load the house images and then scale the pixel intensities to the
 # range [0, 1]
 print("[INFO] loading images...")
-inputPath ="D:/School/Master/Vakken/MPR/Project/Data/50States2K_test/small_subset"
+inputPath ="D:\Git\Pattern-Recognition-Project\TestData\small_subset"
 images = datasets.load_images(df, inputPath)
 #images = images / 255.0
 
 print("[INFO] loading labels...")
-labels = datasets.load_labels("D:\School\Master\Vakken\MPR\Project\Data\small_subset_labels.csv")
+labels = datasets.load_labels("D:\Git\Pattern-Recognition-Project\TestData\small_subset_labels.csv")
 
 testY = labels[:1250]
 trainY = labels[1250:]
