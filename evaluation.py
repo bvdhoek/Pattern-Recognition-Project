@@ -54,8 +54,75 @@ centres = {
     "Wyoming" : (42.9957, 107.5512),
 }
 
+states = [
+    "Alabama",
+    "Alaska",
+    "Arizona",
+    "Arkansas",
+    "California",
+    "Colorado",
+    "Connecticut",
+    "Delaware",
+    "Columbia",
+    "Florida",
+    "Georgia",
+    "Hawaii",
+    "Idaho",
+    "Illinois",
+    "Indiana",
+    "Iowa",
+    "Kansas",
+    "Kentucky",
+    "Louisiana",
+    "Maine",
+    "Maryland",
+    "Massachusetts",
+    "Michigan",
+    "Minnesota",
+    "Mississippi",
+    "Missouri",
+    "Montana",
+    "Nebraska",
+    "Nevada",
+    "New Hampshire",
+    "New Jersey",
+    "New Mexico",
+    "New York",
+    "North Carolina",
+    "North Dakota",
+    "Ohio",
+    "Oklahoma",
+    "Oregon",
+    "Pennsylvania",
+    "Rhode Island",
+    "South Carolina",
+    "South Dakota",
+    "Tennessee",
+    "Texas",
+    "Utah",
+    "Vermont",
+    "Virginia",
+    "Washington",
+    "West Virginia",
+    "Wisconsin",
+    "Wyoming"]
+
 def state_distance(state1, state2):
     return(distance(centres[state1], centres[state2]))
 
+def evaluate_classification(pred, targ):
+    # pred is probability distribution (list)
+    # target is number
+    max_value = max(pred)
+    max_index = pred.index(max_value)
+    sPred = states[max_index]
+    sTarg = states[targ]
+    dist = state_distance(sPred, sTarg)
+
+    return dist
+
 if __name__ == "__main__":
+    # test
     print(state_distance("Utah", "Washington"))
+    print(evaluate_classification([0.4,0.3,0.0,0.9],15))
+    print(state_distance("Arkansas",states[15]))

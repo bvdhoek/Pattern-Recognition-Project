@@ -10,9 +10,9 @@ import argparse
 import locale
 import os
 import pandas as pd
+import tensorflow as tf
 
 percentage_test = .25
-
 
 # construct the argument parser and parse the arguments
 #ap = argparse.ArgumentParser()
@@ -23,17 +23,19 @@ percentage_test = .25
 # construct the path to the input .txt file that contains information
 # on each house in the dataset and then load the dataset
 print("[INFO] loading Category attributes...")
-inputPath = "D:\Git\Pattern-Recognition-Project\TestData\small_subset_dummy_categories.csv"
+inputPath = "TestData\small_subset_dummy_categories.csv"
 df = datasets.load_category_attributes(inputPath)
 # load the house images and then scale the pixel intensities to the
 # range [0, 1]
 print("[INFO] loading images...")
-inputPath ="D:\Git\Pattern-Recognition-Project\TestData\small_subset"
+inputPath ="TestData\small_subset"
 images = datasets.load_images(df, inputPath)
 #images = images / 255.0
 
 print("[INFO] loading labels...")
-labels = datasets.load_labels("D:\Git\Pattern-Recognition-Project\TestData\small_subset_labels.csv")
+labels = datasets.load_labels("TestData\small_subset_labels.csv")
+# labels_encoded = []
+# print(labels)
 
 testY = labels[:1250]
 trainY = labels[1250:]
