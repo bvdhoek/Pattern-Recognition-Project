@@ -29,7 +29,7 @@ def create_mlp(dim, hp):
 	# return our model
 	return model
 
-#hyperparameter optimisation added here only for filter sizes
+ #hyperparameter optimisation added here only for filter sizes
 def create_cnn(hp):
 	# initialize the input shape and channel dimension, assuming
 	# TensorFlow/channels-last ordering
@@ -44,7 +44,8 @@ def create_cnn(hp):
 		if i == 0:
 			x = inputs
 		# CONV => RELU => BN => POOL
-		x = Conv2D(hp.Int('filter ' + str(i),min_value=32, max_value=128, step=16 ), (3, 3), padding="same")(x)
+		x = Conv2D(hp.Int('filter ' + str(i) + ' size',min_value=32,
+                    max_value=128, step=16 ), (3, 3), padding="same")(x)
 		x = Activation("relu")(x)
 		x = BatchNormalization(axis=chanDim)(x)
 		x = MaxPooling2D(pool_size=(2, 2))(x)

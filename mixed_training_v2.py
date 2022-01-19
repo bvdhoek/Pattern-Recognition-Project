@@ -1,5 +1,5 @@
 import datasets
-import models
+import models_v2
 from sklearn.model_selection import train_test_split
 from tensorflow.keras.layers import Dense
 from tensorflow.keras.models import Model
@@ -53,8 +53,11 @@ split = train_test_split(df, images, test_size=percentage_test, random_state=42)
 
 #created functions which add output layer to the models created in models.py
 #makes our life easier because we can then do all 3 types of models to compare
+
+#TODO: make sure that the model values are saved before putting them into the output layer
+#So that they can be concatenated in the mixed model
 def compile_mlp(hp):
-    mlp = models.create_mlp(trainCategories.shape[1], hp)
+    mlp = models_v2.create_mlp(trainCategories.shape[1], hp)
     output = Dense(len(np.unique(labels)), activation="softmax")(mlp.output)
     model = Model(inputs = mlp.input, outputs = output)
     model.compile(loss="sparse_categorical_crossentropy", optimizer=opt, metrics = ['accuracy'])
@@ -62,7 +65,7 @@ def compile_mlp(hp):
 
 
 def compile_cnn(hp):
-    cnn = models.create_cnn(hp)
+    cnn = models_v2.create_cnn(hp)
     #add output layer
     output = Dense(len(np.unique(labels)), activation="softmax")(cnn.output)
     model = Model(inputs = cnn.input, outputs = output)
@@ -81,7 +84,8 @@ def compile_mixed_model(hp):
     return model
 
 #tune hyperparameters. Not sure if this will work with the mixed model yet
-#use one of three functions above as input   
+#use one of three functions above as input
+#also add code to save the parameters of best model   
 def tune_hyperparams(trainX, trainY, testX, testY, function):
     tuner = RandomSearch(function,
                     objective='val_accuracy',
