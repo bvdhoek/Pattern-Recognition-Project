@@ -38,6 +38,8 @@ labels = datasets.load_labels("TestData/small_subset_labels.csv")
 # labels_encoded = []
 # print(labels)
 
+
+
 testY = labels[:1250]
 trainY = labels[1250:]
 opt = Adam(lr=1e-3, decay=1e-3 / 200)
@@ -51,11 +53,13 @@ split = train_test_split(df, images, test_size=percentage_test, random_state=42)
 #maybe change to 1-hot encoding? If so change loss to "categorical_crossentropy"
 
 
+
 #created functions which add output layer to the models created in models.py
 #makes our life easier because we can then do all 3 types of models to compare
 
-#TODO: make sure that the model values are saved before putting them into the output layer
-#So that they can be concatenated in the mixed model
+
+
+
 def compile_mlp(hp):
     mlp = models_v2.create_mlp(trainCategories.shape[1], hp)
     output = Dense(len(np.unique(labels)), activation="softmax")(mlp.output)
@@ -63,8 +67,15 @@ def compile_mlp(hp):
     model.compile(loss="sparse_categorical_crossentropy", optimizer=opt, metrics = ['accuracy'])
     return model
 
+def compile_resnet():
+    model = models_v2.create_resnet(256, 256, 50)
+    optimizer = Adam(lr=0.01)
+    model.compile(optimizer=optimizer, loss='categorical_crossentropy', metrics=['accuracy'])
+    return model
 
 def compile_cnn(hp):
+    
+    ### Our old bit
     cnn = models_v2.create_cnn(hp)
     #add output layer
     output = Dense(len(np.unique(labels)), activation="softmax")(cnn.output)
@@ -96,6 +107,51 @@ def tune_hyperparams(trainX, trainY, testX, testY, function):
     model=tuner.get_best_models(num_models=1)[0]
     #summary of best model
     model.summary()   
+
+
+resnet_model = compile_resnet()
+resnet_model.fit(trainImages, trainY)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 # create the MLP and CNN models
