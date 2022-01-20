@@ -8,16 +8,7 @@ from tensorflow.keras.layers import Dense
 from tensorflow.keras.layers import Flatten
 from tensorflow.keras.layers import Input
 from tensorflow.keras.models import Model
-from tensorflow.keras.initializers import glorot_uniform
-from tensorflow.keras.layers import Add
-from tensorflow.keras.layers import AveragePooling2D
-from tensorflow.keras.layers import ZeroPadding2D
-from tensorflow.keras.applications.resnet50 import ResNet50
-from tensorflow.keras.layers import Input
-from tensorflow.keras.layers import Dense, GlobalAveragePooling2D
-from tensorflow.keras.models import Model
-from tensorflow.keras.callbacks import EarlyStopping
-from tensorflow.keras.metrics import RootMeanSquaredError
+
 #am only experimenting with filter size. Still not done anything with dropout,
 # learning rate (I think), batch size, stride, #layers, layer size etc.
 
@@ -27,7 +18,7 @@ from tensorflow.keras.metrics import RootMeanSquaredError
 #takes this long???
 
 #hyperparameter optimisatio (e.g. hp.Int) not implemented here
-def create_mlp(dim, hp):
+def create_mlp(dim):
 	# define our MLP network
 	model = Sequential()
 	model.add(Dense(8, input_dim=dim, activation="relu"))
@@ -79,13 +70,20 @@ def create_cnn(hp):
 	# return the CNN
 	return model
 
-
-def create_resnet(HEIGHT, WIDTH, number_classes):
+def create_resNet():
+    from tensorflow.keras.applications.resnet50 import ResNet50
+    from tensorflow.keras.layers import Input
     
-    input_tensor = Input(shape=(HEIGHT, WIDTH, 3))
-
-    model = ResNet50(
-    include_top=True, weights=None, input_tensor=input_tensor,
-    input_shape=None, classes=number_classes)
-
+    input_tensor = Input(shape=(256, 256, 3))
+    
+    base_model = ResNet50(
+        include_top=False, weights=None, input_tensor=input_tensor,
+        input_shape=None)
+    
+    from tensorflow.keras.layers import GlobalAveragePooling2D
+    
+    x=base_model.output
+    x=GlobalAveragePooling2D()(x)
+    model = Model(input_tensor, x)
     return model
+
