@@ -38,8 +38,6 @@ labels = datasets.load_labels("TestData/small_subset_labels.csv")
 # labels_encoded = []
 # print(labels)
 
-
-
 testY = labels[:1250]
 trainY = labels[1250:]
 opt = Adam(lr=1e-3, decay=1e-3 / 200)
@@ -53,29 +51,20 @@ split = train_test_split(df, images, test_size=percentage_test, random_state=42)
 #maybe change to 1-hot encoding? If so change loss to "categorical_crossentropy"
 
 
-
 #created functions which add output layer to the models created in models.py
 #makes our life easier because we can then do all 3 types of models to compare
 
-
-
-
+#TODO: make sure that the model values are saved before putting them into the output layer
+#So that they can be concatenated in the mixed model
 def compile_mlp(hp):
-    mlp = models_v2.create_mlp(trainCategories.shape[1], hp)
+    mlp = models_v2.create_mlp(trainCategories.shape[1])
     output = Dense(len(np.unique(labels)), activation="softmax")(mlp.output)
     model = Model(inputs = mlp.input, outputs = output)
     model.compile(loss="sparse_categorical_crossentropy", optimizer=opt, metrics = ['accuracy'])
     return model
 
-def compile_resnet():
-    model = models_v2.create_resnet(256, 256, 50)
-    optimizer = Adam(lr=0.01)
-    model.compile(optimizer=optimizer, loss='categorical_crossentropy', metrics=['accuracy'])
-    return model
 
 def compile_cnn(hp):
-    
-    ### Our old bit
     cnn = models_v2.create_cnn(hp)
     #add output layer
     output = Dense(len(np.unique(labels)), activation="softmax")(cnn.output)
@@ -106,54 +95,44 @@ def tune_hyperparams(trainX, trainY, testX, testY, function):
     tuner.search(trainX,trainY,epochs=3,validation_data=(testX,testY))
     model=tuner.get_best_models(num_models=1)[0]
     #summary of best model
-    model.summary()   
+    model.summary()
+    
 
+#Runs ResNet50 using only pixel data    
+def compile_resNet(trainX, trainY):
+    resnet = models_v2.create_resNet()
+    output_layer = Dense(len(np.unique(labels)), activation="softmax")(resnet.output)
+    model=Model(inputs = resnet.input,outputs=output_layer)
+    #STEP_SIZE_VALID=val_generator.n//val_generator.batch_size
+    
+    model.compile(loss = 'sparse_categorical_crossentropy', optimizer=opt, metrics=['accuracy'])
+    #monitor = EarlyStopping(monitor='val_loss', min_delta=1e-3, patience=50, verbose=1, mode='auto',
+            #restore_best_weights=True)
+    model.fit(x = trainX, y = trainY, epochs = 1)
+    
+    model.summary()
+                    
 
-resnet_model = compile_resnet()
-resnet_model.fit(trainImages, trainY)
+#mixed ResNet50 and MLP
+def mix(trainX, trainY, trainCategories):
+    resnet = models_v2.create_resNet()
+    mlp = models_v2.create_mlp(trainCategories.shape[1])
+    combinedInput = concatenate([mlp.output, resnet.output])
+    # put mixed input into final relu and then do classification
+    x = Dense(4, activation="relu")(combinedInput)
+    x = Dense(len(np.unique(labels)), activation="softmax")(x)
+    model = Model(inputs=[mlp.input, resnet.input], outputs=x)
+    model.compile(loss="sparse_categorical_crossentropy", optimizer=opt, metrics = ['accuracy'])
+    model.fit(x = [trainCategories, trainX], y = trainY, epochs = 1)
+    model.summary()
 
+#run only resnet
+#compile_resNet(trainImages, trainY)  
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+#run mixed model  
+mix(trainImages, trainY, trainCategories)
+    
+    
 # create the MLP and CNN models
 #mlp = models.create_mlp(trainCategories.shape[1], regress=False)
 #cnn = models.create_cnn(256, 256, 3, regress=False)
