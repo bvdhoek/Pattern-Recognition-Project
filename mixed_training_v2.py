@@ -73,8 +73,8 @@ def compile_cnn(hp):
     return model
 
 def compile_mixed_model(hp):
-    cnn = models.create_cnn(hp)
-    mlp = models.create_mlp(hp)
+    cnn = models_v2.create_cnn(hp)
+    mlp = models_v2.create_mlp(hp)
     combinedInput = concatenate([mlp.output, cnn.output])
     # put mixed input into final relu and then do classification
     x = Dense(4, activation="relu")(combinedInput)
