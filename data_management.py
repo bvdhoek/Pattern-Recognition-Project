@@ -50,4 +50,4 @@ def get_data_splits(data_path, img_directory,
                             test_size=test_size, random_state=random_state)
 
 if __name__ == "__main__":
-    get_data_splits("Data/labels.csv","D:/Darknet/50States2K",test_size=0.1, random_state=42)
+    get_data_splits("Data/result_2k.csv","D:/Darknet/50States2K",test_size=0.1, random_state=42)
