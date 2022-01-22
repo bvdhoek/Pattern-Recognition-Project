@@ -26,11 +26,11 @@ def resNet():
 if __name__ == "__main__":
     # Get data splits
     data_path = "Data/result_10k.csv"
-    img_directory = "D:/Darknet/GeoLocation"
+    img_directory = "D:/Darknet/50States10K"
     validation_size = 0.1
     random_state = 42
     read_from_pickle = False
-    pickle_path = "10k.npy"
+    pickle_path = "10k"
 
     splits = get_data_splits(data_path=data_path,
                              img_directory=img_directory,
