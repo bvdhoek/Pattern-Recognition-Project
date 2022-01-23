@@ -25,12 +25,12 @@ def resNet():
 
 if __name__ == "__main__":
     # Get data splits
-    data_path = "Data/result_10k.csv"
-    img_directory = "D:/Darknet/50States10K"
+    data_path = "Data/result_2k.csv"
+    img_directory = "D:/Darknet/50States2K"
     validation_size = 0.1
     random_state = 42
     read_from_pickle = False
-    pickle_path = "10k"
+    pickle_path = "2k"
 
     splits = get_data_splits(data_path=data_path,
                              img_directory=img_directory,
@@ -60,7 +60,7 @@ if __name__ == "__main__":
     # ResNet model
     resnet = resNet()
     output_layer = Dense(50, activation="softmax")(resnet.output)
-    model = Model(inputs=resnet.input, output=output_layer)
+    model = Model(inputs=resnet.input, outputs=output_layer)
 
     model.compile(loss=CategoricalCrossentropy(from_logits=False),
                   optimizer=opt,
@@ -80,7 +80,7 @@ if __name__ == "__main__":
                         y=statesTrain,
                         validation_data=(imagesValidation,statesValidation),
                         epochs=1,
-                        batch_size=64,
+                        batch_size=32,
                         callbacks=callbacks
                        )
 

@@ -43,7 +43,7 @@ def get_data_splits(data_path, img_directory,
         for filepath in tqdm(relative_paths):
             images.append(cv2.imread(base_img_path + filepath))
         images = np.array(images)
-        images.dump(pickle_path)
+        # images.dump(pickle_path)
 
     ### CREATE TRAIN/TEST SPLITS ###
     return train_test_split(images, objects, states,
