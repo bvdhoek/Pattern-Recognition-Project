@@ -7,6 +7,8 @@ from numpy import percentile
 from mlxtend.evaluate import mcnemar_table
 from mlxtend.evaluate import mcnemar
 from scipy import stats
+import pandas as pd
+import numpy as np
 
 #code from https://machinelearningmastery.com/confidence-intervals-for-machine-learning/
 
@@ -68,3 +70,31 @@ def t_test(model1, model2, data):
         print()
         stats.ttest_ind(predictions1[i], predictions2[i],
                         equal_var = False, alternative = 'two sided')
+        
+
+def ANOVA_test(model_1_predictions, model_2_predictions, model_3_predictions):
+    d = {'Model 1': model_1_predictions, 'Model 2': model_2_predictions, 'Model 3': model_3_predictions}
+    df = pd.DataFrame(data=d)
+   
+    from scipy.stats import f_oneway
+    from statsmodels.stats.multicomp import pairwise_tukeyhsd
+    
+    
+   
+    print(f_oneway(model_1_predictions, model_2_predictions, model_3_predictions))
+    
+    concatenated = model_1_predictions + model_2_predictions + model_3_predictions
+    
+    df = pd.DataFrame({'score': concatenated,
+                   'group': np.repeat(['model_1', 'model_2', 'model_3'], repeats=len(model_1_predictions))}) 
+   
+    tukey = pairwise_tukeyhsd(endog=df['score'],
+                          groups=df['group'],
+                          alpha=0.05)
+    print(tukey)
+    
+test_model_1 = [85, 86, 88, 75, 78, 94, 98, 79, 71, 80]
+test_model_2 = [91, 92, 93, 90, 97, 94, 82, 88, 95, 96]
+test_model_3 = [79, 78, 88, 94, 92, 85, 83, 85, 82, 81]
+
+ANOVA_test(test_model_1, test_model_2, test_model_3)
