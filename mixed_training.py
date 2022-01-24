@@ -65,6 +65,7 @@ x = Dense(1, activation="linear")(x)
 # our final model will accept categorical/numerical data on the MLP
 # input and images on the CNN input, outputting a single value (the
 # predicted price of the house)
+
 model = Model(inputs=[mlp.input, cnn.input], outputs=x)
 
 # compile the model using mean absolute percentage error as our loss,

@@ -9,6 +9,8 @@ from mlxtend.evaluate import mcnemar
 from scipy import stats
 import pandas as pd
 import numpy as np
+from scipy.stats import f_oneway
+from statsmodels.stats.multicomp import pairwise_tukeyhsd
 
 #code from https://machinelearningmastery.com/confidence-intervals-for-machine-learning/
 
@@ -73,26 +75,25 @@ def t_test(model1, model2, data):
         
 
 def ANOVA_test(model_1_predictions, model_2_predictions, model_3_predictions):
-    d = {'Model 1': model_1_predictions, 'Model 2': model_2_predictions, 'Model 3': model_3_predictions}
-    df = pd.DataFrame(data=d)
-   
-    from scipy.stats import f_oneway
-    from statsmodels.stats.multicomp import pairwise_tukeyhsd
     
-    
-   
     print(f_oneway(model_1_predictions, model_2_predictions, model_3_predictions))
+    
+    #With the test values, we can see an alpha value of less than 0.05, this means that the null hypothesis (the means are the same)
+    # can be rejected meaning there is a statistical difference between the models. Now we do the Tukeys test to determine which groups are different
+    
     
     concatenated = model_1_predictions + model_2_predictions + model_3_predictions
     
-    df = pd.DataFrame({'score': concatenated,
-                   'group': np.repeat(['model_1', 'model_2', 'model_3'], repeats=len(model_1_predictions))}) 
+    df = pd.DataFrame({'predictions': concatenated, 'Model': np.repeat(['model_1', 'model_2', 'model_3'], repeats=len(model_1_predictions))}) 
    
-    tukey = pairwise_tukeyhsd(endog=df['score'],
-                          groups=df['group'],
-                          alpha=0.05)
+    tukey = pairwise_tukeyhsd(endog=df['predictions'], groups=df['Model'], alpha=0.05)
     print(tukey)
     
+    #With the test values, the table should be interpreted as: the p-value for difference between model 1 and model 2 is 0.0158 meaning that there
+    #is a statistically significant difference between model 1 and 2. Same goes for models 2 and 3, as their alpha is 0.04.
+    #The p value for the comparison between model 1 and 3 is higher than 0.05 meaning that there is no significant difference between model 1 and 3
+    
+#test values:    
 test_model_1 = [85, 86, 88, 75, 78, 94, 98, 79, 71, 80]
 test_model_2 = [91, 92, 93, 90, 97, 94, 82, 88, 95, 96]
 test_model_3 = [79, 78, 88, 94, 92, 85, 83, 85, 82, 81]

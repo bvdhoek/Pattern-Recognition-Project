@@ -4,11 +4,33 @@ from tensorflow.keras.models import Model
 from tensorflow.keras.applications.resnet50 import ResNet50
 from data_management import get_data_splits
 from tensorflow.keras.layers import Dense
+from tensorflow.keras.layers import InputLayer
 from tensorflow.keras.models import Model
+from tensorflow.keras.optimizers import Adam
 from tensorflow_addons.optimizers import AdamW
 from tensorflow.keras.losses import CategoricalCrossentropy
 from tensorflow.keras.callbacks import ModelCheckpoint
+from tensorflow.keras.models import Sequential
+import numpy as np
 
+def train_MLP(objectsTrain, objectsValidation, statesTrain, statesValidation):
+   
+ 
+    input_shape = (len(objectsTrain[0]),)
+    print(f'Feature shape: {input_shape}')
+    
+    model = Sequential()
+    model.add(Dense(350, input_shape=input_shape, activation='relu'))
+    model.add(Dense(50, activation='relu'))
+    model.add(Dense(len(statesTrain[0]), activation='softmax'))
+    
+    model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
+    model.fit(objectsTrain, statesTrain, epochs=10, batch_size=250, verbose=1, validation_split=0.2)
+
+    test_results = model.evaluate(objectsValidation, statesValidation, verbose=1)
+    print(f'Test results - Loss: {test_results[0]} - Accuracy: {test_results[1]}%')
+    
+    
 def resNet():
     input_tensor = Input(shape=(256, 256, 3))
     
@@ -43,10 +65,15 @@ if __name__ == "__main__":
      objectsTrain, objectsValidation,
      statesTrain, statesValidation
     ) = splits
+    
+    train_MLP(objectsTrain, objectsValidation,
+     statesTrain, statesValidation)
+
 
 
     # optimiser
     # Maybe we should use AdamW instead?
+   
     opt = AdamW(
                 weight_decay=0.0001,
                 learning_rate=0.001,
@@ -56,7 +83,7 @@ if __name__ == "__main__":
                 amsgrad=False,
                 name="AdamW"
                 )
-
+    
     # ResNet model
     resnet = resNet()
     output_layer = Dense(50, activation="softmax")(resnet.output)
@@ -89,3 +116,4 @@ if __name__ == "__main__":
 
     # save model
     model.save("ResNetModel")
+    
