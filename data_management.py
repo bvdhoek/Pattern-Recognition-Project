@@ -141,6 +141,7 @@ states = [
     "Wisconsin",
     "Wyoming"]
 
+<<<<<<< HEAD
     def get_data_splits(data_path, img_directory,
                     test_size=None, random_state=None,
                     read_from_pickle=False, pickle_path='images.npy'):
@@ -161,30 +162,42 @@ states = [
     # generate filepaths
     df['relativepath'] = df['state'] + '/' + df['filename']
     relative_paths = df.loc[:,'relativepath']
+=======
+def data_pipeline(csvPath, imgDirectory, batchSize, bufferSize, seed):
+    # Read CSV
+    col_numbers = [i for i in range(51,131)]
+    csv_ds = tf.data.experimental.make_csv_dataset(
+        file_pattern=csvPath,
+        select_columns=col_numbers,
+        batch_size=batchSize,
+        shuffle=False,
+        num_epochs=1
+        )
+>>>>>>> d28a12452be5d5266749c9e0e39a9eee7fe3bfe6
     
+    # Fetch Images
+    img_ds = image_dataset_from_directory(
+        imgDirectory,
+        labels="inferred",
+        label_mode="categorical",
+        class_names=None,
+        color_mode="rgb",
+        batch_size=batchSize,
+        image_size=(256, 256),
+        shuffle=False,
+        seed=None,
+        validation_split=None,
+        subset=None,
+        interpolation="bilinear",
+        follow_links=False,
+        crop_to_aspect_ratio=False
+    )
 
-    ### PROCESS DATA ###
-    # turn object input and state targets into numpy arrays
-    objects = objects.to_numpy()
-    states = states.to_numpy()
-    # read images
-    if read_from_pickle:
-        try:
-            images = np.load(pickle_path)
-        except Exception:
-            print("Something went wrong opening the pickle, "
-                  "does it exist at pickle_path?")
-    else:
-        base_img_path = img_directory + '/'
-        images = []
-        for filepath in tqdm(relative_paths):
-            images.append(cv2.imread(base_img_path + filepath))
-        images = np.array(images)
-        # images.dump(pickle_path)
-
-    ### CREATE TRAIN/TEST SPLITS ###
-    return train_test_split(images, objects, states,
-                            test_size=test_size, random_state=random_state)
+    # Combine Datasets
+    ds = tf.data.Dataset.zip((img_ds,csv_ds))
+    # for x in ds.take(1):
+    #     print(type(x))
+    #     print(x)
 
 
 def data_pipeline(csvPath, imgDirectory, batchSize, bufferSize, seed):
