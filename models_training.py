@@ -1,7 +1,7 @@
 from tensorflow.keras.layers import Dense
 from tensorflow.keras.layers import Input
 from tensorflow.keras.models import Model
-from tensorflow.keras.applications.resnet50 import ResNet50
+from tensorflow.keras.applications.resnet50 import ResNet50, preprocess_input
 from data_management import get_data_splits
 from tensorflow.keras.layers import Dense
 from tensorflow.keras.layers import InputLayer
@@ -12,6 +12,7 @@ from tensorflow.keras.losses import CategoricalCrossentropy
 from tensorflow.keras.callbacks import ModelCheckpoint
 from tensorflow.keras.models import Sequential
 import numpy as np
+import tensorflow as tf
 
 def train_MLP(objectsTrain, objectsValidation, statesTrain, statesValidation):
    
@@ -32,17 +33,14 @@ def train_MLP(objectsTrain, objectsValidation, statesTrain, statesValidation):
     
     
 def resNet():
-    input_tensor = Input(shape=(256, 256, 3))
-    
-    base_model = ResNet50(
-        include_top=False, weights=None, input_tensor=input_tensor,
-        input_shape=None)
-    
-    from tensorflow.keras.layers import GlobalAveragePooling2D
-    
-    x=base_model.output
-    x=GlobalAveragePooling2D()(x)
-    model = Model(input_tensor, x)
+    i = Input([None,None,3], dtype=tf.uint8)
+    x = tf.cast(i, tf.float32)
+    x = preprocess_input(x)
+    core = ResNet50(include_top=False, weights=None,
+                    input_shape=None, pooling='avg')
+    x = core(x)
+    model = Model(inputs=[i],outputs=[x])
+
     return model
 
 if __name__ == "__main__":
@@ -72,8 +70,6 @@ if __name__ == "__main__":
 
 
     # optimiser
-    # Maybe we should use AdamW instead?
-   
     opt = AdamW(
                 weight_decay=0.0001,
                 learning_rate=0.001,
