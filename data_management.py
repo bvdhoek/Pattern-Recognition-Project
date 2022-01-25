@@ -1,12 +1,11 @@
-from matplotlib.pyplot import axis
 import pandas as pd
 import numpy as np
 import cv2
 from sklearn.model_selection import train_test_split
 from tqdm import tqdm
-import tensorflow as tf
-
 imgDir = tf.constant("D:/Darknet/50States2K/")
+import tensorflow as tf
+from tensorflow.keras.preprocessing import image_dataset_from_directory
 
 names = [
         'person',
@@ -142,7 +141,7 @@ states = [
     "Wisconsin",
     "Wyoming"]
 
-def get_data_splits(data_path, img_directory,
+    def get_data_splits(data_path, img_directory,
                     test_size=None, random_state=None,
                     read_from_pickle=False, pickle_path='images.npy'):
     """Retrieves the data in \'data_path\' (as in labels.csv),
@@ -187,70 +186,103 @@ def get_data_splits(data_path, img_directory,
     return train_test_split(images, objects, states,
                             test_size=test_size, random_state=random_state)
 
-def data_pipeline(csvPath, imgDirectory):
-    ds_types = [tf.string] + ([tf.int32]*130)
-    ds = tf.data.experimental.CsvDataset(
-        filenames=csvPath,
-        record_defaults=ds_types,
-        header=True,
 
-    )
-    ds = tf.data.experimental.make_csv_dataset(
+def data_pipeline(csvPath, imgDirectory, batchSize, bufferSize, seed):
+    # Read CSV
+    col_numbers = [i for i in range(51,131)]
+    csv_ds = tf.data.experimental.make_csv_dataset(
         file_pattern=csvPath,
-        batch_size=5,
-        shuffle_buffer_size=100000,
-        shuffle_seed=42,
-        num_epochs=1)
+        select_columns=col_numbers,
+        batch_size=batchSize,
+        shuffle=False,
+        num_epochs=1
+        )
+    
+    # Fetch Images
+    img_ds = image_dataset_from_directory(
+        imgDirectory,
+        labels="inferred",
+        label_mode="categorical",
+        class_names=None,
+        color_mode="rgb",
+        batch_size=batchSize,
+        image_size=(256, 256),
+        shuffle=False,
+        seed=None,
+        validation_split=None,
+        subset=None,
+        interpolation="bilinear",
+        follow_links=False,
+        crop_to_aspect_ratio=False
+    )
 
-    # for k in iter(ds):
-    #     print(ds[k].numpy())
+    # Combine Datasets
+    ds = tf.data.Dataset.zip((img_ds,csv_ds))
     # for x in ds.take(1):
-    #     for (k,v) in x:
-    #         print(v.numpy())
-    #     print(x.element_spec)
-        # for key, value in val.items():
-        #     print(f"{key:20s}: {value}")
-        # for key, value in lab.items():
-        #     print(f"{key:20s}: {value}")
+    #     print(type(x))
+    #     print(x)
 
-    ds = ds.map(reshape_input_dict)
-    
-    
-    
-    # # print(ds.element_spec)
+    # Translate to tuple of dicts
+    ds = ds.map(reshape_input_tuple)
+    # print("final ds")
+    # for x in ds.take(1):
+    #     print(x)
 
-def reshape_input_dict(x):
-    # parse filename into image
-    filename = x["filename"]
-    print(filename)
-    filepath = tf.strings.join([imgDir,filename])
-    print(filepath)
-    with tf.compat.v1.Session() as sess:
-        filepath = filepath.eval()
-
-    print(filepath)
-
-    image = tf.io.read_file(filepath)
-    image = tf.io.decode_jpeg(image,channels=3)
+    # Shuffle Data
+    ds = ds.shuffle(
+        buffer_size=bufferSize,
+        seed=seed,
+        reshuffle_each_iteration=False
+    )
 
 
-    # combine state values into single tensor
-    stateL = []
-    for s in states:
-        stateL.append([x[s]])
-    state = tf.concat(stateL,axis=1)
-    print(state)
+    # https://stackoverflow.com/questions/51125266/how-do-i-split-tensorflow-datasets
+    # recover = lambda x,y: y
+
+    # test_dataset = ds.enumerate() \
+    #                     .filter(is_test) \
+    #                     .map(recover)
+
+    # train_dataset = ds.enumerate() \
+    #                     .filter(is_train) \
+    #                     .map(recover)
+
+    # print("test")
+    # for x in ds.take(1):
+    #     print(x)
+
+    # print("train")
+    # for x in ds.take(1):
+    #     print(x)
+
+
+    # Prefetch Data
+    ds = ds.prefetch(tf.data.AUTOTUNE)
+
+    print("prefetch")
+    for x in ds.take(1):
+        print(x)
+
+    return(ds)
+
+# def is_test(x, y):
+#     return x % 10 == 0
+
+# def is_train(x, y):
+#     return not is_test(x, y)
+
+def reshape_input_tuple(image_state,objects):
+    """Maybe we should change objects to floats"""
+    (image,state) = image_state
 
     # combine object values into single tensor
     objectsL = []
     for n in names:
-        objectsL.append([x[n]])
+        objectsL.append([objects[n]])
     objects = tf.concat(objectsL,axis=1)
 
     # return tuple of value/label dicts
-    # return(({'image':image, 'objects':objects},{'state':state}))
-    return(({'objects':objects},{'state':state}))
+    return(({'image':image,'objects':objects},{'state':state}))
 
 if __name__ == "__main__":
-    # get_data_splits("Data/result_2k.csv","D:/Darknet/50States2K",test_size=0.1, random_state=42)
-    data_pipeline("Data/2k.csv", "D:/Darknet/50States2K")
+    data_pipeline("Data/2k.csv", "D:/Darknet/50States2K", 1, 10000, 42)
