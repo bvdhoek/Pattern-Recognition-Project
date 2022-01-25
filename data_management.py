@@ -3,9 +3,10 @@ import numpy as np
 import cv2
 from sklearn.model_selection import train_test_split
 from tqdm import tqdm
-imgDir = tf.constant("D:/Darknet/50States2K/")
 import tensorflow as tf
 from tensorflow.keras.preprocessing import image_dataset_from_directory
+
+imgDir = tf.constant("D:/Darknet/50States2K/")
 
 names = [
         'person',
@@ -141,7 +142,7 @@ states = [
     "Wisconsin",
     "Wyoming"]
 
-    def get_data_splits(data_path, img_directory,
+def get_data_splits(data_path, img_directory,
                     test_size=None, random_state=None,
                     read_from_pickle=False, pickle_path='images.npy'):
     """Retrieves the data in \'data_path\' (as in labels.csv),
@@ -259,9 +260,9 @@ def data_pipeline(csvPath, imgDirectory, batchSize, bufferSize, seed):
     # Prefetch Data
     ds = ds.prefetch(tf.data.AUTOTUNE)
 
-    print("prefetch")
-    for x in ds.take(1):
-        print(x)
+    # print("prefetch")
+    # for x in ds.take(1):
+    #     print(x)
 
     return(ds)
 

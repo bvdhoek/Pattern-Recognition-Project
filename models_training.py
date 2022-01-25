@@ -114,28 +114,28 @@ def resNet():
 
 if __name__ == "__main__":
     # Get data splits
-    data_path = "Data/result_2k.csv"
+    data_path = "Data/2k.csv"
     img_directory = "D:/Darknet/50States2K"
     validation_size = 0.1
     random_state = 42
     read_from_pickle = False
     pickle_path = "2k"
 
-    ds = data_pipeline(data_path, img_directory, 64, 10000, 42)
+    ds = data_pipeline(data_path, img_directory, 64, 100, 42)
     
 
-    splits = get_data_splits(data_path=data_path,
-                            img_directory=img_directory,
-                            test_size= validation_size,
-                            random_state=random_state,
-                            read_from_pickle=read_from_pickle,
-                            pickle_path=pickle_path
-                        )
-    (imagesTrain, imagesValidation,
-     objectsTrain, objectsValidation,
-     statesTrain, statesValidation
-    ) = splits
-    MLP_HP_TUNING(objectsTrain, objectsValidation, statesTrain, statesValidation)
+    # splits = get_data_splits(data_path=data_path,
+    #                         img_directory=img_directory,
+    #                         test_size= validation_size,
+    #                         random_state=random_state,
+    #                         read_from_pickle=read_from_pickle,
+    #                         pickle_path=pickle_path
+    #                     )
+    # (imagesTrain, imagesValidation,
+    #  objectsTrain, objectsValidation,
+    #  statesTrain, statesValidation
+    # ) = splits
+    # MLP_HP_TUNING(objectsTrain, objectsValidation, statesTrain, statesValidation)
 
 
 
@@ -170,7 +170,7 @@ if __name__ == "__main__":
 
     # train resNet model
     history = model.fit(x=ds,
-                        validation_data=(imagesValidation,statesValidation),
+                        # validation_data=(imagesValidation,statesValidation),
                         epochs=1,
                         batch_size=64,
                         callbacks=callbacks
