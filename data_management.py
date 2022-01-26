@@ -236,27 +236,6 @@ def data_pipeline(csvPath, imgDirectory, batchSize, bufferSize, seed):
         reshuffle_each_iteration=False
     )
 
-
-    # https://stackoverflow.com/questions/51125266/how-do-i-split-tensorflow-datasets
-    # recover = lambda x,y: y
-
-    # test_dataset = ds.enumerate() \
-    #                     .filter(is_test) \
-    #                     .map(recover)
-
-    # train_dataset = ds.enumerate() \
-    #                     .filter(is_train) \
-    #                     .map(recover)
-
-    # print("test")
-    # for x in ds.take(1):
-    #     print(x)
-
-    # print("train")
-    # for x in ds.take(1):
-    #     print(x)
-
-
     # Prefetch Data
     ds = ds.prefetch(tf.data.AUTOTUNE)
 
@@ -283,7 +262,7 @@ def reshape_input_tuple(image_state,objects):
     objects = tf.concat(objectsL,axis=1)
 
     # return tuple of value/label dicts
-    return(({'image':image,'objects':objects},{'state':state}))
+    return(({'image':image,'objects_input':objects},{'state':state}))
 
 if __name__ == "__main__":
     data_pipeline("Data/2k.csv", "D:/Darknet/50States2K", 1, 10000, 42)
