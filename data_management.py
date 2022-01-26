@@ -259,7 +259,11 @@ def reshape_input_tuple(image_state,objects):
     objectsL = []
     for n in names:
         objectsL.append([objects[n]])
-    objects = tf.concat(objectsL,axis=1)
+    print(objectsL[0])
+    objects = tf.concat(objectsL,axis=0)
+    print(objects.shape)
+    objects = tf.transpose(objects)
+    print(objects.shape)
 
     # return tuple of value/label dicts
     return(({'image':image,'objects_input':objects},{'state':state}))

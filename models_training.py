@@ -167,7 +167,7 @@ def compileCombined():
     print(mlp_model.output_shape)
     print(resnet.output_shape)
     combinedInput = concatenate([mlp_model.output, resnet.output])
-    x = Dense(4, activation="relu")(combinedInput)
+    # x = Dense(4, activation="relu")(combinedInput)
     x = Dense(50, activation="softmax", name='state')(x)
     model = Model(inputs=[mlp_model.input, resnet.input], outputs=x)
     keras.utils.plot_model(model, "multi_input_and_output_model.png", show_shapes=True)
@@ -199,6 +199,7 @@ def trainCombined():
                                 )
                 ]
 
+    print(training_ds.take(1))
     # train resNet model
     history = model.fit(x=training_ds,
                         validation_data=validation_ds,
