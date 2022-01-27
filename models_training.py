@@ -18,6 +18,9 @@ import numpy as np
 import tensorflow as tf
 from tensorboard.plugins.hparams import api as hp
 from data_management import data_pipeline
+import json
+import pickle
+tf.keras.optimizers.AdamW = AdamW
 
 
 def MLP_HP_TUNING(objectsTrain, objectsValidation, statesTrain, statesValidation):    
@@ -137,6 +140,17 @@ def resNet():
 #     banana
 
 def compileResNet():
+    # optimiser
+    opt = AdamW(
+                weight_decay=0.0001,
+                learning_rate=0.001,
+                beta_1=0.9,
+                beta_2=0.999,
+                epsilon=1e-07,
+                amsgrad=False,
+                name="AdamW"
+                )
+    
     # ResNet model
     resnet = resNet()
     output_layer = Dense(50, activation="softmax", name='state')(resnet.output)
@@ -145,6 +159,8 @@ def compileResNet():
     model.compile(loss=CategoricalCrossentropy(from_logits=False),
                   optimizer=opt,
                   metrics=['accuracy'])
+    
+    return model
 
 
 def compileCombined():
@@ -220,8 +236,8 @@ def trainResNet():
     training_image_directory = "D:/Darknet/training"
     validation_image_directory = "D:/Darknet/validation"
 
-    training_ds = data_pipeline(training_data_path, training_image_directory, 64, 50, 42)
-    validation_ds = data_pipeline(validation_data_path, validation_image_directory, 64, 50, 42)
+    training_ds = data_pipeline(training_data_path, training_image_directory, 5, 50, 42)
+    validation_ds = data_pipeline(validation_data_path, validation_image_directory, 5, 50, 42)
     
     # Get model
     model = compileResNet()
@@ -238,7 +254,7 @@ def trainResNet():
     # train resNet model
     history = model.fit(x=training_ds,
                         validation_data=validation_ds,
-                        epochs=25,
+                        epochs=10,
                         callbacks=callbacks
                        )
 
@@ -248,15 +264,34 @@ def trainResNet():
     # save model
     model.save("ResNetModelEnd")
 
+def evaluate_model(model_path):
+    model = keras.models.load_model(model_path)
+    ds = data_pipeline("Data/2k.csv","D:/Darknet/50States2K",5,50,42)
+
+    # evaluate, writing results to pickle and human readable json
+    evaluate_results = model.evaluate(ds, return_dict=True)
+    pickle_name = model_path + "_evaluate.pkl"
+    with open(pickle_name, "wb") as pickle_file:
+        pickle.dump(evaluate_results, pickle_file)
+    json_name = model_path + "_evaluate.json"
+    with open(json_name, "w") as json_file:
+        json.dump(evaluate_results,json_file)
+    
+    print("sone evaluating")
+
+
+
+
+
 
 if __name__ == "__main__":
-    # Get data splits
-    training_data_path = "Data/train.csv"
-    validation_data_path = "Data/validation.csv"
-    training_image_directory = "D:/Darknet/training"
-    validation_image_directory = "D:/Darknet/validation"
-    test_data_path = "Data/2k.csv"
-    test_image_directory = "D:/Darknet/50States2K"
+    # # Get data splits
+    # training_data_path = "Data/train.csv"
+    # validation_data_path = "Data/validation.csv"
+    # training_image_directory = "D:/Darknet/training"
+    # validation_image_directory = "D:/Darknet/validation"
+    # test_data_path = "Data/2k.csv"
+    # test_image_directory = "D:/Darknet/50States2K"
 
     # # validation_size = 0.1
     # random_state = 42
@@ -331,4 +366,8 @@ if __name__ == "__main__":
 
     # model = keras.models.load_model('ResNetModel')
     # model.predict()
-    trainCombined()
+
+
+    # trainResNet()
+
+    evaluate_model("ResNetModel_10")
