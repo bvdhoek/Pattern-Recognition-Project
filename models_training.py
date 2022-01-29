@@ -97,7 +97,7 @@ def MLP_HP_TUNING(objectsTrain, objectsValidation, statesTrain, statesValidation
     for line in results:
         print(line)
 
-def train_MLP(objectsTrain, objectsValidation, statesTrain, statesValidation):
+def train_MLP():
    
     #  with the determined optimal hyper parameters
     num_units = 32
@@ -443,17 +443,21 @@ if __name__ == "__main__":
     # model = keras.models.load_model('ResNetModel')
     # model.predict()
 
-    print("training combined")
-    trainCombined()
-    print("training mlp")
-    train_MLP
-    print("training resnet")
-    trainResNet()
+    # print("training combined")
+    # trainCombined()
 
-    # predict_results_combined("CombinedModel_10")
 
-    # predict_results_mlp('MlpModelEnd')
+    # print("training mlp")
+    # train_MLP()
+    # print("training resnet")
+    # trainResNet()
 
-    # predict_results_resnet('ResNetModel_5')
+    print("evaluating mlp")
+    evaluate_model('MlpModel_100imgs_25epochs_15')
+    print("evaluating ResNet")
+    evaluate_model('ResNetModel_100imgs_25epochs_13')
 
-    # evaluate_model('ResNetModel_5')
+    print("Predicting mlp")
+    predict_results_mlp('MlpModel_100imgs_25epochs_15')
+    print("Predicting ResNet")
+    predict_results_resnet('ResNetModel_100imgs_25epochs_13')
