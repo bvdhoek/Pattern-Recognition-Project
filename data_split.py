@@ -12,11 +12,11 @@ in_path = Path("./50States10K")
 out_path = Path("./50States10KSplit10K")
 
 input_image_path = Path("D:/Darknet/50States10K")
-training_image_path = Path("D:/Darknet/training")
-validation_image_Path = Path("D:/Darknet/validation")
+training_image_path = Path("D:/Darknet/training_100")
+validation_image_Path = Path("D:/Darknet/validation_100")
 csv_input_path = Path("D:/Documents - Storage Drive/!UU/2021-2022/2 Pattern Recognition/Pattern-Recognition-Project/Data/10k.csv")
-csv_training_path = Path("D:/Documents - Storage Drive/!UU/2021-2022/2 Pattern Recognition/Pattern-Recognition-Project/Data/train.csv")
-csv_validation_path = Path("D:/Documents - Storage Drive/!UU/2021-2022/2 Pattern Recognition/Pattern-Recognition-Project/Data/validation.csv")
+csv_training_path = Path("D:/Documents - Storage Drive/!UU/2021-2022/2 Pattern Recognition/Pattern-Recognition-Project/Data/train_100.csv")
+csv_validation_path = Path("D:/Documents - Storage Drive/!UU/2021-2022/2 Pattern Recognition/Pattern-Recognition-Project/Data/validation_100.csv")
 
 percentage_train = 0.9
 
@@ -49,8 +49,8 @@ def split_data_and_csv():
 
     num_images = len(images)
     state_count = int(num_images / 50)
-    state_training_count = int(state_count/5)
-    state_validation_count = int(state_count/50)
+    state_training_count = int(state_count/100)
+    state_validation_count = int(state_count/100)
 
     with open(csv_input_path,mode='r',newline='') as csv_input, open(csv_training_path, mode='w',newline='') as csv_training, open(csv_validation_path, mode='w',newline='') as csv_validation:
         input_csv_reader = csv.reader(csv_input,delimiter=',')

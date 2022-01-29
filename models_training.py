@@ -20,7 +20,29 @@ from tensorboard.plugins.hparams import api as hp
 from data_management import data_pipeline
 import json
 import pickle
+from tqdm import tqdm
+import pandas as pd
+import numpy as np
 tf.keras.optimizers.AdamW = AdamW
+
+def mlp():
+    #  with the determined optimal hyper parameters
+    num_units = 32
+    dropout_rate = 0.1
+    hp_batch_size = 100
+    hp_optimizer = 'sgd'
+    
+    input_shape = (80,)
+    
+    model = Sequential()
+    
+    #input layer
+    model.add(Dense(num_units, input_shape=input_shape, activation='relu',name='objects'))
+    
+    #dropout layer
+    model.add(Dropout(dropout_rate))
+
+    return model
 
 
 def MLP_HP_TUNING(objectsTrain, objectsValidation, statesTrain, statesValidation):    
@@ -83,47 +105,51 @@ def train_MLP(objectsTrain, objectsValidation, statesTrain, statesValidation):
     hp_batch_size = 100
     hp_optimizer = 'sgd'
     
-    input_shape = (len(objectsTrain[0]),)
-    
-    model = Sequential()
-    
-    #input layer
-    model.add(Dense(num_units, input_shape=input_shape, activation='relu'),name='')
-    
-    #dropout layer
-    model.add(Dropout(dropout_rate))
+    model = mlp()
     
     #output layer
-    model.add(Dense(len(statesTrain[0]), activation='softmax'))
-    
+    model.add(Dense(50, activation='softmax', name='state'))
     
     model.compile(loss='categorical_crossentropy', optimizer=hp_optimizer, metrics=['accuracy'])
     
-    model.fit(objectsTrain, statesTrain, epochs=50, batch_size=hp_batch_size, verbose=1, validation_split=0.2)
+    # model.fit(objectsTrain, statesTrain, epochs=50, batch_size=hp_batch_size, verbose=1, validation_split=0.2)
 
-    test_results = model.evaluate(objectsValidation, statesValidation, verbose=1)
-    line = "parameters: num_units=" + str(num_units) + ", dropout=" + str(dropout_rate) + ", optimizer=" + str(hp_optimizer) + ", batch_size=" + str(hp_batch_size)
-    print(f'Test results - Loss: {test_results[0]} - Accuracy: {test_results[1]}%')
-    
+    # test_results = model.evaluate(objectsValidation, statesValidation, verbose=1)
+    # line = "parameters: num_units=" + str(num_units) + ", dropout=" + str(dropout_rate) + ", optimizer=" + str(hp_optimizer) + ", batch_size=" + str(hp_batch_size)
+    # print(f'Test results - Loss: {test_results[0]} - Accuracy: {test_results[1]}%')
 
-def mlp():
-    #  with the determined optimal hyper parameters
-    num_units = 32
-    dropout_rate = 0.1
-    hp_batch_size = 100
-    hp_optimizer = 'sgd'
-    
-    input_shape = (80,)
-    
-    model = Sequential()
-    
-    #input layer
-    model.add(Dense(num_units, input_shape=input_shape, activation='relu',name='objects'))
-    
-    #dropout layer
-    model.add(Dropout(dropout_rate))
 
-    return model
+    # Get data splits
+    training_data_path = "Data/train_100.csv"
+    validation_data_path = "Data/validation_100.csv"
+    training_image_directory = "D:/Darknet/training_100"
+    validation_image_directory = "D:/Darknet/validation_100"
+
+    training_ds = data_pipeline(training_data_path, training_image_directory, 5, 6000, 42)
+    validation_ds = data_pipeline(validation_data_path, validation_image_directory, 5, 6000, 42)
+    
+    # set up callbacks to keep best epoch
+    callbacks = [
+                ModelCheckpoint(filepath="MlpModel_100imgs_25epochs_{epoch}",
+                                save_best_only=True,
+                                monitor="val_accuracy",
+                                verbose=1,
+                                )
+                ]
+
+    # train resNet model
+    history = model.fit(x=training_ds,
+                        validation_data=validation_ds,
+                        epochs=25,
+                        callbacks=callbacks
+                       )
+
+    # print summary
+    print(model.summary())
+
+    # save model
+    model.save("MlpModelEnd_100imgs_25epochs")
+    
     
 def resNet():
     i = Input([None,None,3], dtype=tf.uint8, name='image')
@@ -195,22 +221,22 @@ def compileCombined():
 
 def trainCombined():
     # Get data splits
-    training_data_path = "Data/train.csv"
-    validation_data_path = "Data/validation.csv"
-    training_image_directory = "D:/Darknet/training"
-    validation_image_directory = "D:/Darknet/validation"
+    training_data_path = "Data/train_100.csv"
+    validation_data_path = "Data/validation_100.csv"
+    training_image_directory = "D:/Darknet/training_100"
+    validation_image_directory = "D:/Darknet/validation_100"
 
-    training_ds = data_pipeline(training_data_path, training_image_directory, 5, 50, 42)
-    validation_ds = data_pipeline(validation_data_path, validation_image_directory, 5, 50, 42)
+    training_ds = data_pipeline(training_data_path, training_image_directory, 5, 6000, 42)
+    validation_ds = data_pipeline(validation_data_path, validation_image_directory, 5, 6000, 42)
     
     # Get model
     model = compileCombined()
 
     # set up callbacks to keep best epoch
     callbacks = [
-                ModelCheckpoint(filepath="CombinedModel_{epoch}",
+                ModelCheckpoint(filepath="CombinedModel_100imgs_25epochs_{epoch}",
                                 save_best_only=True,
-                                monitor="val_loss",
+                                monitor="val_accuracy",
                                 verbose=1,
                                 )
                 ]
@@ -227,26 +253,26 @@ def trainCombined():
     print(model.summary())
 
     # save model
-    model.save("CombinedModelEnd")
+    model.save("CombinedModelEnd_100imgs_25epochs")
 
 def trainResNet():
     # Get data splits
-    training_data_path = "Data/train.csv"
-    validation_data_path = "Data/validation.csv"
-    training_image_directory = "D:/Darknet/training"
-    validation_image_directory = "D:/Darknet/validation"
+    training_data_path = "Data/train_100.csv"
+    validation_data_path = "Data/validation_100.csv"
+    training_image_directory = "D:/Darknet/training_100"
+    validation_image_directory = "D:/Darknet/validation_100"
 
-    training_ds = data_pipeline(training_data_path, training_image_directory, 5, 50, 42)
-    validation_ds = data_pipeline(validation_data_path, validation_image_directory, 5, 50, 42)
+    training_ds = data_pipeline(training_data_path, training_image_directory, 5, 6000, 42)
+    validation_ds = data_pipeline(validation_data_path, validation_image_directory, 5, 6000, 42)
     
     # Get model
     model = compileResNet()
 
     # set up callbacks to keep best epoch
     callbacks = [
-                ModelCheckpoint(filepath="ResNetModel_{epoch}",
+                ModelCheckpoint(filepath="ResNetModel_100imgs_25epochs_{epoch}",
                                 save_best_only=True,
-                                monitor="val_loss",
+                                monitor="val_accuracy",
                                 verbose=1,
                                 )
                 ]
@@ -254,7 +280,7 @@ def trainResNet():
     # train resNet model
     history = model.fit(x=training_ds,
                         validation_data=validation_ds,
-                        epochs=10,
+                        epochs=25,
                         callbacks=callbacks
                        )
 
@@ -262,11 +288,11 @@ def trainResNet():
     print(model.summary())
 
     # save model
-    model.save("ResNetModelEnd")
+    model.save("ResNetModelEnd_100imgs_25epochs")
 
 def evaluate_model(model_path):
     model = keras.models.load_model(model_path)
-    ds = data_pipeline("Data/2k.csv","D:/Darknet/50States2K",5,50,42)
+    ds = data_pipeline("Data/2k.csv","D:/Darknet/50States2K",5,1,42)
 
     # evaluate, writing results to pickle and human readable json
     evaluate_results = model.evaluate(ds, return_dict=True)
@@ -277,10 +303,60 @@ def evaluate_model(model_path):
     with open(json_name, "w") as json_file:
         json.dump(evaluate_results,json_file)
     
-    print("sone evaluating")
+    print("done evaluating")
 
 
+def predict_results_resnet(model_path):
+    print("predicting")
+    model = keras.models.load_model(model_path)
+    
+    ds = data_pipeline("Data/2k.csv","D:/Darknet/50States2K",5,1,42)
+    
+    states = ["Alabama","Alaska","Arizona","Arkansas","California","Colorado","Connecticut","Delaware","Florida","Georgia","Hawaii","Idaho","Illinois","Indiana","Iowa","Kansas","Kentucky","Louisiana","Maine","Maryland","Massachusetts","Michigan","Minnesota","Mississippi","Missouri","Montana","Nebraska","Nevada","New Hampshire","New Jersey","New Mexico","New York","North Carolina","North Dakota","Ohio","Oklahoma","Oregon","Pennsylvania","Rhode Island","South Carolina","South Dakota","Tennessee","Texas","Utah","Vermont","Virginia","Washington","West Virginia","Wisconsin","Wyoming"]
+    predictions = []
+    for d in tqdm(ds):
+        predictions += list(model.predict(d[0]["image"]))
+    predictions = np.array(predictions)
+    
+    df = pd.DataFrame(predictions, columns=states)
+    predictions_name = model_path+"_predictions.csv"
+    df.to_csv(predictions_name)
+    print("done predicting")
 
+
+def predict_results_combined(model_path):
+    print("predicting")
+    model = keras.models.load_model(model_path)
+    
+    ds = data_pipeline("Data/2k.csv","D:/Darknet/50States2K",5,1,42)
+    
+    states = ["Alabama","Alaska","Arizona","Arkansas","California","Colorado","Connecticut","Delaware","Florida","Georgia","Hawaii","Idaho","Illinois","Indiana","Iowa","Kansas","Kentucky","Louisiana","Maine","Maryland","Massachusetts","Michigan","Minnesota","Mississippi","Missouri","Montana","Nebraska","Nevada","New Hampshire","New Jersey","New Mexico","New York","North Carolina","North Dakota","Ohio","Oklahoma","Oregon","Pennsylvania","Rhode Island","South Carolina","South Dakota","Tennessee","Texas","Utah","Vermont","Virginia","Washington","West Virginia","Wisconsin","Wyoming"]
+    predictions = []
+    for d in tqdm(ds):
+        predictions += list(model.predict([d[0]["objects_input"], d[0]["image"]]))
+    predictions = np.array(predictions)
+    
+    df = pd.DataFrame(predictions, columns=states)
+    predictions_name = model_path+"_predictions.csv"
+    df.to_csv(predictions_name)
+    print("done predicting")
+
+def predict_results_mlp(model_path):
+    print("predicting")
+    model = keras.models.load_model(model_path)
+    
+    ds = data_pipeline("Data/2k.csv","D:/Darknet/50States2K",5,50,42)
+    
+    states = ["Alabama","Alaska","Arizona","Arkansas","California","Colorado","Connecticut","Delaware","Florida","Georgia","Hawaii","Idaho","Illinois","Indiana","Iowa","Kansas","Kentucky","Louisiana","Maine","Maryland","Massachusetts","Michigan","Minnesota","Mississippi","Missouri","Montana","Nebraska","Nevada","New Hampshire","New Jersey","New Mexico","New York","North Carolina","North Dakota","Ohio","Oklahoma","Oregon","Pennsylvania","Rhode Island","South Carolina","South Dakota","Tennessee","Texas","Utah","Vermont","Virginia","Washington","West Virginia","Wisconsin","Wyoming"]
+    predictions = []
+    for d in tqdm(ds):
+        predictions += list(model.predict(d[0]["objects_input"]))
+    predictions = np.array(predictions)
+    
+    df = pd.DataFrame(predictions, columns=states)
+    predictions_name = model_path+"_predictions.csv"
+    df.to_csv(predictions_name)
+    print("done predicting")
 
 
 
@@ -367,7 +443,17 @@ if __name__ == "__main__":
     # model = keras.models.load_model('ResNetModel')
     # model.predict()
 
+    print("training combined")
+    trainCombined()
+    print("training mlp")
+    train_MLP
+    print("training resnet")
+    trainResNet()
 
-    # trainResNet()
+    # predict_results_combined("CombinedModel_10")
 
-    evaluate_model("ResNetModel_10")
+    # predict_results_mlp('MlpModelEnd')
+
+    # predict_results_resnet('ResNetModel_5')
+
+    # evaluate_model('ResNetModel_5')
