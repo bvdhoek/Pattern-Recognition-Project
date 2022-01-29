@@ -1,4 +1,7 @@
 from geopy.distance import distance
+
+import numpy as np
+from sklearn.metrics import confusion_matrix
 #testing
 centres = {
     "Alabama" : (32.7794, 86.8287),
@@ -9,7 +12,7 @@ centres = {
     "Colorado" : (38.9972, 105.5478),
     "Connecticut" : (41.6219, 72.7273),
     "Delaware" : (38.9896, 75.5050),
-    # "Columbia" : (38.9101, 77.0147),
+    "Columbia" : (38.9101, 77.0147),
     "Florida" : (28.6305, 82.4497),
     "Georgia" : (32.6415, 83.4426),
     "Hawaii" : (20.2927, 156.3737),
@@ -63,7 +66,7 @@ states = [
     "Colorado",
     "Connecticut",
     "Delaware",
-    # "Columbia",
+    "Columbia",
     "Florida",
     "Georgia",
     "Hawaii",
@@ -113,13 +116,27 @@ def state_distance(state1, state2):
 def evaluate_classification(pred, targ):
     # pred is probability distribution (list)
     # target is number
-    max_value = max(pred)
-    max_index = pred.index(max_value)
+    #max_value = max(pred)
+    max_index = np.argmax(pred)
+    print(max_index)
     sPred = states[max_index]
     sTarg = states[targ]
     dist = state_distance(sPred, sTarg)
 
-    return dist
+    return str(dist)
+
+
+#returns a vector of predicted labels
+def make_preds(probs):
+    preds = np.zeros((len(probs),1))
+    for i in range(len(probs)): 
+        preds[i] = np.argmax(probs.iloc[i,:])  
+    return preds
+
+def confusion_matrix(labels, probs):
+    preds = make_preds(probs)
+    print(confusion_matrix(labels, preds))
+    
 
 if __name__ == "__main__":
     # test

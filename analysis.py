@@ -7,11 +7,12 @@ from numpy import percentile
 from mlxtend.evaluate import mcnemar_table
 from mlxtend.evaluate import mcnemar
 from scipy import stats
-import pandas as pd
-import numpy as np
+import evaluation
+from sklearn.metrics import top_k_accuracy_score
 from scipy.stats import f_oneway
 from statsmodels.stats.multicomp import pairwise_tukeyhsd
-
+import pandas as pd
+import numpy as np
 #code from https://machinelearningmastery.com/confidence-intervals-for-machine-learning/
 
 #Monte Carlo method (I think)
@@ -73,7 +74,6 @@ def t_test(model1, model2, data):
         stats.ttest_ind(predictions1[i], predictions2[i],
                         equal_var = False, alternative = 'two sided')
         
-
 def ANOVA_test(model_1_predictions, model_2_predictions, model_3_predictions):
     
     print(f_oneway(model_1_predictions, model_2_predictions, model_3_predictions))
@@ -89,13 +89,74 @@ def ANOVA_test(model_1_predictions, model_2_predictions, model_3_predictions):
     tukey = pairwise_tukeyhsd(endog=df['predictions'], groups=df['Model'], alpha=0.05)
     print(tukey)
     
-    #With the test values, the table should be interpreted as: the p-value for difference between model 1 and model 2 is 0.0158 meaning that there
-    #is a statistically significant difference between model 1 and 2. Same goes for models 2 and 3, as their alpha is 0.04.
-    #The p value for the comparison between model 1 and 3 is higher than 0.05 meaning that there is no significant difference between model 1 and 3
     
-#test values:    
-test_model_1 = [85, 86, 88, 75, 78, 94, 98, 79, 71, 80]
-test_model_2 = [91, 92, 93, 90, 97, 94, 82, 88, 95, 96]
-test_model_3 = [79, 78, 88, 94, 92, 85, 83, 85, 82, 81]
+def removesuffix(string):
+    if string.endswith(' km'):
+        return string[:-3]
+    
 
-ANOVA_test(test_model_1, test_model_2, test_model_3)
+        
+labels = pd.read_csv('2K_states_int.csv')
+#labels_str = pd.read_csv('2K_states_str.csv')
+
+probs_mlp = pd.read_csv('MLP_and_ResNet/MlpModel_100imgs_25epochs_15_predictions.csv')
+probs_resnet = pd.read_csv('MLP_and_ResNet/ResNetModel_100imgs_25epochs_13_predictions.csv')
+probs_mixed = pd.read_csv('CombinedModelEnd_100imgs_25epochs_predictions.csv')
+
+probs_mlp = probs_mlp.iloc[:,1:51]
+probs_resnet = probs_resnet.iloc[:,1:51]
+probs_mixed = probs_mixed.iloc[:,1:51]
+
+preds_mlp = evaluation.make_preds(probs_mlp)
+preds_resnet = evaluation.make_preds(probs_resnet)
+preds_mixed = evaluation.make_preds(probs_mixed)
+
+
+#dist_mlp = evaluation.evaluate_classification(preds_mlp, labels)
+#dist_resnet = evaluation.evaluate_classification(preds_resnet, labels)
+#dist_mixed = evaluation.evaluate_classification(preds_mixed, labels)
+
+def top_k_acc():
+    for k in (1,2,3,5):
+        print('top ' + str(k) + 'accuracy for MLP: ' + str(top_k_accuracy_score(labels, probs_mlp, k = k)))
+        print('top ' + str(k) + 'accuracy for ResNet: ' + str(top_k_accuracy_score(labels, probs_resnet, k = k)))
+        print('top ' + str(k) + 'accuracy for Mixed model: ' + str(top_k_accuracy_score(labels, probs_mixed, k = k)))
+        print()
+    
+def get_distances():
+    distances_mlp = np.zeros((len(labels),1))
+    distances_resnet = np.zeros((len(labels),1))
+    distances_mixed = np.zeros((len(labels),1))
+    for i in range(len(labels)):
+        distances_mlp[i] = float(removesuffix(str(evaluation.evaluate_classification(probs_mlp.iloc[i,:], int(labels.iloc[i,:])))))
+        distances_resnet[i] = float(removesuffix(str(evaluation.evaluate_classification(probs_resnet.iloc[i,:], int(labels.iloc[i,:])))))
+        distances_mixed[i] = float(removesuffix(str(evaluation.evaluate_classification(probs_mixed.iloc[i,:], int(labels.iloc[i,:])))))
+    
+    return distances_mlp, distances_resnet, distances_mixed
+
+def get_correct_preds():
+    corr_preds_mlp = []
+    corr_preds_resnet = []
+    corr_preds_mixed = []
+    for i in range(len(labels)):
+        
+        label = int(labels.iloc[i])
+        
+        if preds_mlp[i] == label:
+            corr_preds_mlp.append(label)
+            
+        if preds_resnet[i] == label:
+            corr_preds_resnet.append(label)   
+            
+        if preds_mixed[i] == label:
+            corr_preds_mixed.append(label)
+    return corr_preds_mlp, corr_preds_resnet, corr_preds_mixed
+
+def plot_hist(data):
+    pd.DataFrame(data).hist()
+        
+#ANOVA_test(distances_mlp.reshape(100013,), distances_resnet.reshape(100013,), distances_mixed.reshape(100013,))
+#test values:    
+#test_model_1 = [85, 86, 88, 75, 78, 94, 98, 79, 71, 80]
+#test_model_2 = [91, 92, 93, 90, 97, 94, 82, 88, 95, 96]
+#test_model_3 = [79, 78, 88, 94, 92, 85, 83, 85, 82, 81]
